@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>James ♥ Hannah — Countdown</title>
+  <meta name="description" content="Walk through a little world counting down to July 25." />
+  <meta name="theme-color" content="#0b0e1a" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #0b0e1a; touch-action: none;
+      font-family: Georgia, 'Times New Roman', serif; -webkit-user-select: none; user-select: none; }
+    #app, #app canvas { position: fixed; inset: 0; display: block; }
+
+    .vignette { position: fixed; inset: 0; pointer-events: none; z-index: 2;
+      background: radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.42) 100%); }
+
+    /* HUD */
+    #crosshair { position: fixed; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+      border-radius: 50%; background: rgba(255,255,255,0.8); z-index: 5; pointer-events: none;
+      box-shadow: 0 0 6px rgba(0,0,0,0.6); }
+    #powerwrap { position: fixed; left: 50%; bottom: 9%; transform: translateX(-50%);
+      width: 220px; height: 10px; border: 1px solid rgba(232,201,138,0.55); border-radius: 8px;
+      background: rgba(10,12,26,0.55); opacity: 0; transition: opacity 0.15s; z-index: 5; pointer-events: none; }
+    #powerbar { height: 100%; width: 0%; border-radius: 8px;
+      background: linear-gradient(90deg, #e8c98a, #f0a35e, #e05a5a); }
+    #toast { position: fixed; left: 50%; top: 17%; transform: translateX(-50%); z-index: 5;
+      font-size: clamp(26px, 4.5vw, 40px); color: #ffd98e; letter-spacing: 0.06em; opacity: 0;
+      transition: opacity 0.3s, transform 0.3s; pointer-events: none; white-space: nowrap;
+      text-shadow: 0 2px 18px rgba(232,160,80,0.85), 0 1px 3px rgba(0,0,0,0.8); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+    #hintbar { position: fixed; left: 18px; bottom: 14px; z-index: 5; color: rgba(210,216,240,0.6);
+      font-size: 13px; letter-spacing: 0.04em; pointer-events: none; display: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+
+    /* Touch controls */
+    #touch-ui { display: none; }
+    body.touch #touch-ui { display: block; }
+    body.touch #hintbar { display: none !important; }
+    #joystick { position: fixed; left: 36px; bottom: 44px; width: 116px; height: 116px; z-index: 6;
+      border-radius: 50%; border: 2px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05);
+      pointer-events: none; }
+    #stick { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px;
+      border-radius: 50%; background: rgba(255,255,255,0.28); }
+    #throwbtn { position: fixed; right: 26px; bottom: 52px; width: 88px; height: 88px; z-index: 7;
+      border-radius: 50%; border: 2px solid rgba(255,170,90,0.65); background: rgba(255,140,60,0.22);
+      font-size: 42px; line-height: 1; color: #fff; -webkit-tap-highlight-color: transparent; }
+
+    /* Overlay */
+    #overlay { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
+      background: rgba(7,9,18,0.8); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      transition: opacity 0.45s; }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    .card { text-align: center; padding: 40px 30px; max-width: 560px; }
+    .card h1 { color: #f0e2c4; font-size: clamp(34px, 6vw, 52px); font-weight: 500; letter-spacing: 0.08em; }
+    .card .heart { color: #e05a72; }
+    .card .sub { color: #a8b0cf; font-size: clamp(15px, 2.4vw, 18px); margin: 14px 0 30px; letter-spacing: 0.05em; }
+    #enter { font-family: inherit; font-size: 18px; letter-spacing: 0.12em; cursor: pointer;
+      color: #241a10; background: linear-gradient(180deg, #f4d9a0, #dfb26a); border: none;
+      padding: 15px 44px; border-radius: 999px; box-shadow: 0 4px 30px rgba(228,185,110,0.35);
+      transition: transform 0.15s, box-shadow 0.15s; }
+    #enter:hover { transform: translateY(-2px); box-shadow: 0 8px 38px rgba(228,185,110,0.5); }
+    .hints { color: #7d86a8; font-size: 13.5px; margin-top: 26px; line-height: 1.7; letter-spacing: 0.03em; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="vignette"></div>
+
+  <div id="crosshair"></div>
+  <div id="powerwrap"><div id="powerbar"></div></div>
+  <div id="toast"></div>
+  <div id="hintbar">WASD — walk &nbsp;·&nbsp; mouse — look &nbsp;·&nbsp; hold click — shoot 🏀 &nbsp;·&nbsp; ESC — pause</div>
+
+  <div id="touch-ui">
+    <div id="joystick"><div id="stick"></div></div>
+    <button id="throwbtn">🏀</button>
+  </div>
+
+  <div id="overlay">
+    <div class="card">
+      <h1 id="title">James <span class="heart">♥</span> Hannah</h1>
+      <p class="sub" id="subtitle">A little world counting down to the big day</p>
+      <button id="enter">Step Inside</button>
+      <p class="hints" id="hints"></p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
