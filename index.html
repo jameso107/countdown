@@ -64,6 +64,70 @@
       transition: transform 0.15s, box-shadow 0.15s; }
     #enter:hover { transform: translateY(-2px); box-shadow: 0 8px 38px rgba(228,185,110,0.5); }
     .hints { color: #7d86a8; font-size: 13.5px; margin-top: 26px; line-height: 1.7; letter-spacing: 0.03em; }
+
+    /* Identity picker */
+    #who { display: none; justify-content: center; gap: 14px; }
+    .who-btn { font-family: inherit; font-size: 17px; letter-spacing: 0.1em; cursor: pointer;
+      color: #241a10; background: linear-gradient(180deg, #f4d9a0, #dfb26a); border: none;
+      padding: 13px 30px; border-radius: 999px; box-shadow: 0 4px 24px rgba(228,185,110,0.3);
+      transition: transform 0.15s, box-shadow 0.15s; }
+    .who-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(228,185,110,0.5); }
+
+    /* Interaction prompt + presence */
+    #prompt { position: fixed; left: 50%; bottom: 20%; transform: translateX(-50%); z-index: 5;
+      color: #ffd98e; font-size: clamp(16px, 2.6vw, 22px); letter-spacing: 0.06em; display: none;
+      pointer-events: none; white-space: nowrap; text-shadow: 0 2px 14px rgba(232,160,80,0.7), 0 1px 3px rgba(0,0,0,0.8); }
+    #presence { position: fixed; right: 16px; bottom: 14px; z-index: 5; color: #e88ba0;
+      font-size: 13.5px; letter-spacing: 0.05em; pointer-events: none; display: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+
+    /* Sit button (touch) */
+    #sitbtn { position: fixed; right: 130px; bottom: 52px; width: 88px; height: 88px; z-index: 7;
+      border-radius: 50%; border: 2px solid rgba(224,90,114,0.65); background: rgba(224,90,114,0.22);
+      font-size: 42px; line-height: 1; color: #fff; -webkit-tap-highlight-color: transparent; display: none; }
+    body.seated #joystick, body.seated #throwbtn, body.seated #sitbtn { display: none !important; }
+
+    /* Yahtzee panel */
+    #yahtzee { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 8;
+      width: min(330px, 92vw); max-height: 86vh; overflow-y: auto; touch-action: pan-y;
+      background: rgba(10,13,32,0.92); border: 1px solid rgba(232,201,138,0.45); border-radius: 14px;
+      padding: 16px 16px 14px; color: #d8ddf2; box-shadow: 0 8px 44px rgba(0,0,0,0.55);
+      transition: opacity 0.3s; }
+    #yahtzee.hidden { opacity: 0; pointer-events: none; }
+    #yahtzee h2 { color: #f0e2c4; font-weight: 500; font-size: 22px; letter-spacing: 0.12em; text-align: center; }
+    #yahtzee h2 .heart { color: #e05a72; }
+    #yz-status { text-align: center; color: #a8b0cf; font-size: 14px; margin: 6px 0 10px; letter-spacing: 0.04em; min-height: 18px; }
+    #yz-dice { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+    .yz-die { width: 46px; height: 46px; border-radius: 9px; border: 2px solid rgba(232,201,138,0.4);
+      background: #f5efdf; color: #3a2a4a; font-size: 30px; line-height: 1; cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s; -webkit-tap-highlight-color: transparent; }
+    .yz-die:disabled { cursor: default; opacity: 0.55; }
+    .yz-die.held { border-color: #e05a72; transform: translateY(-4px); box-shadow: 0 6px 16px rgba(224,90,114,0.45); }
+    #yz-actions { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; }
+    .yz-btn { font-family: inherit; font-size: 15px; letter-spacing: 0.08em; cursor: pointer;
+      color: #241a10; background: linear-gradient(180deg, #f4d9a0, #dfb26a); border: none;
+      padding: 9px 22px; border-radius: 999px; -webkit-tap-highlight-color: transparent; }
+    .yz-btn:disabled { opacity: 0.4; cursor: default; }
+    .yz-btn.ghost { background: none; border: 1px solid rgba(232,201,138,0.5); color: #d8c9a0; }
+    #yz-card { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    #yz-card th { color: #e8c98a; font-weight: 500; letter-spacing: 0.06em; padding: 4px 6px;
+      border-bottom: 1px solid rgba(232,201,138,0.35); text-align: right; }
+    #yz-card th:first-child { text-align: left; }
+    #yz-card td { padding: 3.5px 6px; border-bottom: 1px solid rgba(120,130,170,0.14); }
+    #yz-card td.num { text-align: right; font-family: Menlo, Consolas, monospace; width: 52px; color: #fdf6e3; }
+    #yz-card td.num.preview { color: #7d86a8; font-style: italic; cursor: pointer; }
+    #yz-card td.num.preview:hover { color: #ffd98e; background: rgba(232,201,138,0.12); border-radius: 4px; }
+    #yz-card tr.total td { border-top: 1px solid rgba(232,201,138,0.35); border-bottom: none;
+      color: #e8c98a; padding-top: 6px; }
+    #yz-card tr.total td.num { color: #ffd98e; }
+    #yz-card th.me, #yz-card td.me-col { text-shadow: 0 0 10px rgba(224,90,114,0.6); }
+    #yz-banner { text-align: center; margin-top: 12px; }
+    #yz-banner.hidden { display: none; }
+    #yz-banner .msg { color: #ffd98e; font-size: 19px; letter-spacing: 0.06em; margin-bottom: 10px;
+      text-shadow: 0 2px 14px rgba(232,160,80,0.7); }
+    @media (max-aspect-ratio: 1/1) {
+      #yahtzee { left: 8px; right: 8px; top: auto; bottom: 8px; transform: none; width: auto; max-height: 56vh; }
+    }
   </style>
 </head>
 <body>
@@ -74,16 +138,38 @@
   <div id="powerwrap"><div id="powerbar"></div></div>
   <div id="toast"></div>
   <div id="hintbar">WASD — walk &nbsp;·&nbsp; mouse — look &nbsp;·&nbsp; hold click — shoot 🏀 &nbsp;·&nbsp; ESC — pause</div>
+  <div id="prompt"></div>
+  <div id="presence"></div>
 
   <div id="touch-ui">
     <div id="joystick"><div id="stick"></div></div>
     <button id="throwbtn">🏀</button>
+    <button id="sitbtn">🎲</button>
+  </div>
+
+  <div id="yahtzee" class="hidden">
+    <h2>yahtzee <span class="heart">♥</span></h2>
+    <div id="yz-status"></div>
+    <div id="yz-dice"></div>
+    <div id="yz-actions">
+      <button id="yz-roll" class="yz-btn">Roll</button>
+      <button id="yz-stand" class="yz-btn ghost">Stand Up</button>
+    </div>
+    <table id="yz-card"></table>
+    <div id="yz-banner" class="hidden">
+      <div class="msg"></div>
+      <button id="yz-rematch" class="yz-btn">Rematch ♥</button>
+    </div>
   </div>
 
   <div id="overlay">
     <div class="card">
       <h1 id="title">James <span class="heart">♥</span> Hannah</h1>
       <p class="sub" id="subtitle"></p>
+      <div id="who">
+        <button class="who-btn" data-who="james">I'm James</button>
+        <button class="who-btn" data-who="hannah">I'm Hannah</button>
+      </div>
       <button id="enter">Step Inside</button>
       <p class="hints" id="hints"></p>
     </div>

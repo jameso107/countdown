@@ -181,7 +181,7 @@ export class Game {
   }
 
   #chargeStart() {
-    if (!this.player.active || this.charge.active || !this.held.visible) return;
+    if (!this.player.active || this.player.seated || this.charge.active || !this.held.visible) return;
     this.charge.active = true;
     this.charge.t = 0.18;
     this.powerwrap.style.opacity = '1';
@@ -267,8 +267,10 @@ export class Game {
       this.powerbar.style.width = `${Math.round(this.charge.t * 100)}%`;
     }
 
-    // held ball follows the camera
-    if (!this.held.visible) {
+    // held ball follows the camera (stowed while seated at the game table)
+    if (this.player.seated) {
+      this.held.visible = false;
+    } else if (!this.held.visible) {
       this.handTimer -= dt;
       if (this.handTimer <= 0) this.held.visible = true;
     }

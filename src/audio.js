@@ -53,6 +53,39 @@ export const audio = {
     });
   },
 
+  // dice rattle across the table
+  dice() {
+    safe((c) => {
+      const t = c.currentTime;
+      const len = 0.26;
+      const buf = c.createBuffer(1, c.sampleRate * len, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      const f = c.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = 1600;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.09, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      src.connect(f).connect(g).connect(c.destination);
+      src.start(t);
+      // little knocks as the dice hit the felt
+      [0.05, 0.12, 0.19].forEach((off) => {
+        const dt = off + Math.random() * 0.05;
+        const o = c.createOscillator();
+        const og = c.createGain();
+        o.type = 'square';
+        o.frequency.value = 300 + Math.random() * 200;
+        og.gain.setValueAtTime(0.05, t + dt);
+        og.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.05);
+        o.connect(og).connect(c.destination);
+        o.start(t + dt); o.stop(t + dt + 0.06);
+      });
+    });
+  },
+
   // basket made
   chime() {
     safe((c) => {

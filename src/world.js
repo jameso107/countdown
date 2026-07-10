@@ -11,6 +11,8 @@ const T = 0.3; // wall thickness
 export const ROOM_A = { x0: -9, x1: 9, z0: -7, z1: 7 };   // gallery
 export const ROOM_B = { x0: 13, x1: 27, z0: -7, z1: 7 };  // arcade
 export const HALL = { x0: 9, x1: 13, z0: -1.4, z1: 1.4 };
+export const ROOM_C = { x0: 15, x1: 25, z0: 11, z1: 19 };    // the parlor (game room)
+export const HALL2 = { x0: 18.6, x1: 21.4, z0: 7, z1: 11 };  // south hallway to the parlor
 
 export const TARGET_DATE = new Date('2026-07-25T15:30:00-07:00'); // July 25, 3:30 PM PDT
 
@@ -232,13 +234,22 @@ export function buildWorld(scene) {
 
   // outer shell
   addWall(ROOM_A.x0 - T, ROOM_B.x1 + T, 0, WALL_H, ROOM_A.z0 - T, ROOM_A.z0, accentMat); // north (countdown wall)
-  addWall(ROOM_A.x0 - T, ROOM_B.x1 + T, 0, WALL_H, ROOM_A.z1, ROOM_A.z1 + T);            // south
+  addWall(ROOM_A.x0 - T, HALL2.x0, 0, WALL_H, ROOM_A.z1, ROOM_A.z1 + T);                 // south, west of parlor door
+  addWall(HALL2.x1, ROOM_B.x1 + T, 0, WALL_H, ROOM_A.z1, ROOM_A.z1 + T);                 // south, east of parlor door
   addWall(ROOM_A.x0 - T, ROOM_A.x0, 0, WALL_H, ROOM_A.z0, ROOM_A.z1);                    // west
   addWall(ROOM_B.x1, ROOM_B.x1 + T, 0, WALL_H, ROOM_B.z0, ROOM_B.z1);                    // east (hoop wall)
   // solid blocks between the two rooms, with hallway gap
   addWall(HALL.x0, HALL.x1, 0, WALL_H, ROOM_A.z0 - T, HALL.z0);
   addWall(HALL.x0, HALL.x1, 0, WALL_H, HALL.z1, ROOM_A.z1 + T);
   addWall(HALL.x0, HALL.x1, DOOR_H, WALL_H, HALL.z0, HALL.z1, wallMat, { player: false }); // door header
+
+  // south annex: hallway to the parlor + the parlor itself
+  addWall(HALL2.x0, HALL2.x1, DOOR_H, WALL_H, ROOM_A.z1, ROOM_C.z0, wallMat, { player: false }); // hall2 header
+  addWall(ROOM_C.x0 - T, HALL2.x0, 0, WALL_H, ROOM_A.z1 + T, ROOM_C.z0);  // hall2 side block, west
+  addWall(HALL2.x1, ROOM_C.x1 + T, 0, WALL_H, ROOM_A.z1 + T, ROOM_C.z0); // hall2 side block, east
+  addWall(ROOM_C.x0 - T, ROOM_C.x0, 0, WALL_H, ROOM_C.z0, ROOM_C.z1);    // parlor west
+  addWall(ROOM_C.x1, ROOM_C.x1 + T, 0, WALL_H, ROOM_C.z0, ROOM_C.z1);    // parlor east
+  addWall(ROOM_C.x0 - T, ROOM_C.x1 + T, 0, WALL_H, ROOM_C.z1, ROOM_C.z1 + T, accentMat); // parlor south
 
   // floor & ceiling
   const floorTex = makeFloorTexture();
@@ -257,6 +268,29 @@ export function buildWorld(scene) {
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.set((ROOM_A.x0 + ROOM_B.x1) / 2, WALL_H, 0);
   scene.add(ceiling);
+
+  // annex floor & ceiling (hall2 + parlor, south of the main slab)
+  const annexW = ROOM_C.x1 - ROOM_C.x0 + 2 * T;
+  const annexD = ROOM_C.z1 + T - (ROOM_A.z1 + T);
+  const annexCx = (ROOM_C.x0 + ROOM_C.x1) / 2;
+  const annexCz = (ROOM_A.z1 + T + ROOM_C.z1 + T) / 2;
+  const annexFloorTex = makeFloorTexture();
+  annexFloorTex.repeat.set(annexW / 4, annexD / 3.65); // match main slab plank density
+  const annexFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(annexW, annexD),
+    new THREE.MeshStandardMaterial({ map: annexFloorTex, roughness: 0.85 })
+  );
+  annexFloor.rotation.x = -Math.PI / 2;
+  annexFloor.position.set(annexCx, 0, annexCz);
+  scene.add(annexFloor);
+
+  const annexCeiling = new THREE.Mesh(
+    new THREE.PlaneGeometry(annexW, annexD),
+    new THREE.MeshStandardMaterial({ color: 0x141828, roughness: 1 })
+  );
+  annexCeiling.rotation.x = Math.PI / 2;
+  annexCeiling.position.set(annexCx, WALL_H, annexCz);
+  scene.add(annexCeiling);
 
   // -------------------------------------------------------------------------
   // Countdown wall
@@ -292,7 +326,7 @@ export function buildWorld(scene) {
     { wall: zWall(HALL.z1, -1), slots: [11], y: 2.0, size: 1.1 },               // hallway
     { wall: xWall(ROOM_B.x0, 1), slots: [-5.3, -3, 3, 5.3], y: 2.0 },           // arcade west (door wall)
     { wall: zWall(ROOM_B.z0, 1), slots: [15.6, 18.6, 21.6, 24.6], y: 2.0 },     // arcade north
-    { wall: zWall(ROOM_B.z1, -1), slots: [15.6, 18.6, 21.6, 24.6], y: 2.0 },    // arcade south
+    { wall: zWall(ROOM_B.z1, -1), slots: [15.4, 17.0, 23.0, 24.8], y: 2.0 },    // arcade south (clears parlor door)
   ];
 
   let cursor = 0;
@@ -324,6 +358,61 @@ export function buildWorld(scene) {
   placeOnWall(signB, xWall(HALL.x1, 1), 0, DOOR_H + 0.55);
   scene.add(signB);
 
+  const signC = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 0.6),
+    new THREE.MeshBasicMaterial({ map: makeTextPanel('THE PARLOR  ↓', { fg: '#ffd9e8', glow: '#e05a72' }) })
+  );
+  placeOnWall(signC, zWall(ROOM_B.z1, -1), (HALL2.x0 + HALL2.x1) / 2, DOOR_H + 0.55);
+  scene.add(signC);
+
+  const signC2 = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 0.6),
+    new THREE.MeshBasicMaterial({ map: makeTextPanel('↑  THE ARCADE', { fg: '#ffe9c0', glow: '#e8a35e' }) })
+  );
+  placeOnWall(signC2, zWall(ROOM_C.z0, 1), (HALL2.x0 + HALL2.x1) / 2, DOOR_H + 0.55);
+  scene.add(signC2);
+
+  const signGameNight = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 0.8),
+    new THREE.MeshBasicMaterial({ map: makeTextPanel('GAME NIGHT ♥', { fg: '#ffd9e8', glow: '#e05a72' }) })
+  );
+  placeOnWall(signGameNight, zWall(ROOM_C.z1, -1), (ROOM_C.x0 + ROOM_C.x1) / 2, 3.1);
+  scene.add(signGameNight);
+
+  // -------------------------------------------------------------------------
+  // Parlor furniture — game table + stools
+  // -------------------------------------------------------------------------
+  const TABLE = { x: (ROOM_C.x0 + ROOM_C.x1) / 2, z: (ROOM_C.z0 + ROOM_C.z1) / 2 }; // (20, 15)
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.6, metalness: 0.1 });
+  const feltMat = new THREE.MeshStandardMaterial({ color: 0x1a2342, roughness: 0.95 });
+  const trimMat = new THREE.MeshStandardMaterial({ color: 0xb98d4f, roughness: 0.4, metalness: 0.6 });
+
+  const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.07, 40), woodMat);
+  tableTop.position.set(TABLE.x, 0.78, TABLE.z);
+  const felt = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.88, 0.015, 40), feltMat);
+  felt.position.set(TABLE.x, 0.816, TABLE.z);
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(0.88, 0.018, 10, 48), trimMat);
+  trim.rotation.x = Math.PI / 2;
+  trim.position.set(TABLE.x, 0.824, TABLE.z);
+  const column = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 0.75, 16), woodMat);
+  column.position.set(TABLE.x, 0.375, TABLE.z);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.06, 24), woodMat);
+  base.position.set(TABLE.x, 0.03, TABLE.z);
+  scene.add(tableTop, felt, trim, column, base);
+
+  const tableBox = { x0: TABLE.x - 0.95, x1: TABLE.x + 0.95, y0: 0, y1: 0.85, z0: TABLE.z - 0.95, z1: TABLE.z + 0.95 };
+  playerColliders.push(tableBox);
+  ballColliders.push(tableBox);
+
+  const stoolMat = new THREE.MeshStandardMaterial({ color: 0x52395c, roughness: 0.8 });
+  [[TABLE.x, TABLE.z - 1.55], [TABLE.x, TABLE.z + 1.55]].forEach(([sx, sz]) => {
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.08, 20), stoolMat);
+    seat.position.set(sx, 0.52, sz);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.5, 12), woodMat);
+    leg.position.set(sx, 0.26, sz);
+    scene.add(seat, leg);
+  });
+
   // -------------------------------------------------------------------------
   // Lighting
   // -------------------------------------------------------------------------
@@ -346,9 +435,17 @@ export function buildWorld(scene) {
   arcadeLight.position.set(20, WALL_H - 0.55, 0);
   scene.add(arcadeLight);
 
+  const parlorLight = new THREE.PointLight(0xffd9c0, 42, 0, 1.8);
+  parlorLight.position.set(20, WALL_H - 0.55, 15);
+  scene.add(parlorLight);
+
+  const hall2Light = new THREE.PointLight(0xffc0d8, 8, 0, 1.8);
+  hall2Light.position.set(20, DOOR_H - 0.3, 9);
+  scene.add(hall2Light);
+
   // ceiling fixtures (emissive discs under the point lights)
   const fixtureMat = new THREE.MeshBasicMaterial({ color: 0xffe9c8 });
-  [[0, 0], [20, 0]].forEach(([x, z]) => {
+  [[0, 0], [20, 0], [20, 15]].forEach(([x, z]) => {
     const disc = new THREE.Mesh(new THREE.CircleGeometry(0.45, 24), fixtureMat);
     disc.rotation.x = Math.PI / 2;
     disc.position.set(x, WALL_H - 0.02, z);
@@ -412,5 +509,12 @@ export function buildWorld(scene) {
     ballColliders,
     countdown,
     motes: { update: moteUpdate },
+    yahtzee: {
+      tableCenter: new THREE.Vector3(TABLE.x, 0.824, TABLE.z),
+      seats: {
+        james: { x: TABLE.x, z: TABLE.z + 1.55, yaw: 0, pitch: -0.42, eye: 1.35 },        // south stool, faces -z
+        hannah: { x: TABLE.x, z: TABLE.z - 1.55, yaw: Math.PI, pitch: -0.42, eye: 1.35 }, // north stool, faces +z
+      },
+    },
   };
 }

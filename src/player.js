@@ -22,6 +22,8 @@ export class Player {
     this.locked = false;
     this.touchMode = false;
     this.started = false;
+    this.seated = false;
+    this.seatEye = 1.35;
 
     this.isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
@@ -39,6 +41,30 @@ export class Player {
 
   get active() {
     return this.locked || (this.touchMode && this.started);
+  }
+
+  // Sitting freezes movement and pins the camera to a seat pose. On desktop it
+  // exits pointer lock so the game overlay's buttons are clickable.
+  sit({ x, z, yaw, pitch, eye }) {
+    this.pos.set(x, 0, z);
+    this.vel.set(0, 0, 0);
+    this.yaw = yaw;
+    this.pitch = pitch;
+    this.seatEye = eye;
+    this.seated = true;
+    this.keys.clear();
+    if (this.locked) document.exitPointerLock?.();
+    this.#applyCamera();
+  }
+
+  stand() {
+    this.seated = false;
+    if (!this.touchMode && this.started) {
+      // re-lock can be refused (e.g. too soon after an ESC unlock) — fall back
+      // to the pause overlay so the player is never stranded cursor-less
+      const p = this.canvas.requestPointerLock?.();
+      p?.catch?.(() => this.overlay.classList.remove('hidden'));
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -69,9 +95,11 @@ export class Player {
     if (!this.isTouch) {
       document.addEventListener('pointerlockchange', () => {
         this.locked = document.pointerLockElement === this.canvas;
-        overlay.classList.toggle('hidden', this.locked);
+        // seated: pointer lock was released on purpose so the game panel is
+        // clickable — don't show the pause overlay
+        overlay.classList.toggle('hidden', this.locked || this.seated);
         hintbar.style.display = this.locked ? 'block' : 'none';
-        if (!this.locked && this.started) {
+        if (!this.locked && this.started && !this.seated) {
           subtitle.textContent = 'Paused — step back inside?';
           enter.textContent = 'Keep Walking';
         }
@@ -111,9 +139,10 @@ export class Player {
     const throwbtn = document.getElementById('throwbtn');
 
     document.addEventListener('touchstart', (e) => {
-      if (!this.touchMode) return;
+      if (!this.touchMode || this.seated) return;
       for (const t of e.changedTouches) {
         if (t.target === throwbtn) continue;
+        if (t.target.closest?.('#yahtzee, #sitbtn')) continue;
         if (t.clientX < window.innerWidth * 0.45 && !this.moveTouch) {
           this.moveTouch = { id: t.identifier, ox: t.clientX, oy: t.clientY, dx: 0, dy: 0 };
           joy.style.left = `${t.clientX - 58}px`;
@@ -126,7 +155,7 @@ export class Player {
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
-      if (!this.touchMode) return;
+      if (!this.touchMode || this.seated) return;
       e.preventDefault();
       for (const t of e.changedTouches) {
         if (this.moveTouch && t.identifier === this.moveTouch.id) {
@@ -166,6 +195,10 @@ export class Player {
 
   // -------------------------------------------------------------------------
   update(dt) {
+    if (this.seated) {
+      this.#applyCamera();
+      return;
+    }
     let fwd = 0, strafe = 0;
     if (this.active) {
       if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) fwd += 1;
@@ -228,7 +261,7 @@ export class Player {
   }
 
   #applyCamera() {
-    this.camera.position.set(this.pos.x, EYE_HEIGHT, this.pos.z);
+    this.camera.position.set(this.pos.x, this.seated ? this.seatEye : EYE_HEIGHT, this.pos.z);
     this.camera.rotation.x = this.pitch;
     this.camera.rotation.y = this.yaw;
   }

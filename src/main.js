@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { buildWorld } from './world.js';
 import { Player } from './player.js';
 import { Game } from './game.js';
+import { initNet, net, getIdentity, setIdentity } from './net.js';
+import { RemoteAvatar } from './avatar.js';
+import { Yahtzee } from './yahtzee.js';
 
 const app = document.getElementById('app');
 
@@ -30,6 +33,28 @@ const world = buildWorld(scene);
 const player = new Player(camera, renderer.domElement, world.playerColliders);
 const game = new Game(scene, camera, world, player);
 
+initNet();
+const avatar = new RemoteAvatar(scene);
+const yahtzee = new Yahtzee(scene, camera, world, player);
+
+// first visit with realtime configured: ask who this is before they step inside
+if (net.enabled && !getIdentity()) {
+  const who = document.getElementById('who');
+  const enter = document.getElementById('enter');
+  const subtitle = document.getElementById('subtitle');
+  subtitle.textContent = "who's stepping inside?";
+  enter.style.display = 'none';
+  who.style.display = 'flex';
+  who.addEventListener('click', (e) => {
+    const btn = e.target.closest('.who-btn');
+    if (!btn) return;
+    setIdentity(btn.dataset.who);
+    who.style.display = 'none';
+    enter.style.display = '';
+    subtitle.textContent = `welcome, ${btn.dataset.who} ♥`;
+  });
+}
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   fitFov();
@@ -37,7 +62,7 @@ window.addEventListener('resize', () => {
 });
 
 // debug handle (used by dev tooling; harmless in production)
-window.__countdown = { player, game, world, camera, scene, renderer };
+window.__countdown = { player, game, world, camera, scene, renderer, yahtzee, avatar, net };
 
 let lastTime = 0;
 let lastCountdownDraw = 0;
@@ -47,6 +72,9 @@ renderer.setAnimationLoop((time) => {
   lastTime = time;
   player.update(dt);
   game.update(dt);
+  yahtzee.update(dt);
+  avatar.update(dt);
+  net.tickPose(player, dt);
   world.motes.update(dt);
 
   const now = Date.now();
