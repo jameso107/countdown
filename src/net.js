@@ -20,6 +20,9 @@ export function setIdentity(name) {
 
 const POSE_INTERVAL = 0.1; // 10 Hz
 
+// events emitted locally (from presence transitions), never sent over the wire
+const LOCAL_EVENTS = new Set(['peer-join', 'peer-leave', 'double-join']);
+
 class Net {
   constructor() {
     this.enabled = !!(URL && KEY);
@@ -27,6 +30,7 @@ class Net {
     this.peer = null; // partner name while they're online, else null
     this.channel = null;
     this.listeners = new Map();
+    this.relayed = new Set();
     this.poseTimer = 0;
     this.lastPose = null;
   }
@@ -34,6 +38,8 @@ class Net {
   on(event, fn) {
     if (!this.listeners.has(event)) this.listeners.set(event, []);
     this.listeners.get(event).push(fn);
+    // listener registered after connect() — attach its wire relay now
+    if (this.channel && !LOCAL_EVENTS.has(event)) this.#relay(event);
   }
 
   #emit(event, payload) {
@@ -43,6 +49,17 @@ class Net {
   send(event, payload = {}) {
     if (!this.channel) return;
     this.channel.send({ type: 'broadcast', event, payload: { ...payload, from: this.me } });
+  }
+
+  // broadcast.self:false only filters the same socket — a second tab of the
+  // same person is a different socket, so filter by identity here too.
+  #relay(event) {
+    if (this.relayed.has(event)) return;
+    this.relayed.add(event);
+    this.channel.on('broadcast', { event }, ({ payload }) => {
+      if (!payload || payload.from === this.me) return;
+      this.#emit(event, payload);
+    });
   }
 
   async connect() {
@@ -55,13 +72,12 @@ class Net {
       });
       this.channel = channel;
 
-      // broadcast.self:false only filters the same socket — a second tab of the
-      // same person is a different socket, so filter by identity here too.
-      const relay = (event) => channel.on('broadcast', { event }, ({ payload }) => {
-        if (!payload || payload.from === this.me) return;
-        this.#emit(event, payload);
-      });
-      ['pose', 'hello', 'snapshot', 'sit', 'stand', 'roll', 'hold', 'score', 'rematch'].forEach(relay);
+      // relay every wire event anything has subscribed to (games register
+      // their listeners in their constructors, before this async connect
+      // resolves; on() covers any that register later)
+      for (const event of this.listeners.keys()) {
+        if (!LOCAL_EVENTS.has(event)) this.#relay(event);
+      }
 
       channel.on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();

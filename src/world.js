@@ -405,13 +405,31 @@ export function buildWorld(scene) {
   ballColliders.push(tableBox);
 
   const stoolMat = new THREE.MeshStandardMaterial({ color: 0x52395c, roughness: 0.8 });
-  [[TABLE.x, TABLE.z - 1.55], [TABLE.x, TABLE.z + 1.55]].forEach(([sx, sz]) => {
+  const addStool = (sx, sz) => {
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.08, 20), stoolMat);
     seat.position.set(sx, 0.52, sz);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.5, 12), woodMat);
     leg.position.set(sx, 0.26, sz);
     scene.add(seat, leg);
-  });
+  };
+  addStool(TABLE.x, TABLE.z - 1.55);
+  addStool(TABLE.x, TABLE.z + 1.55);
+
+  // Connect Four stand in the parlor's west half (board itself lives in connect4.js)
+  const C4 = { x: 16.8, z: 15 };
+  const c4Column = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.11, 0.82, 12), woodMat);
+  c4Column.position.set(C4.x, 0.41, C4.z);
+  const c4Base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.05, 20), woodMat);
+  c4Base.position.set(C4.x, 0.025, C4.z);
+  const c4Top = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.8), woodMat);
+  c4Top.position.set(C4.x, 0.8, C4.z);
+  scene.add(c4Column, c4Base, c4Top);
+  addStool(C4.x + 1.15, C4.z);
+  addStool(C4.x - 1.15, C4.z);
+
+  const c4Box = { x0: C4.x - 0.16, x1: C4.x + 0.16, y0: 0, y1: 1.5, z0: C4.z - 0.42, z1: C4.z + 0.42 };
+  playerColliders.push(c4Box);
+  ballColliders.push(c4Box);
 
   // -------------------------------------------------------------------------
   // Lighting
@@ -514,6 +532,13 @@ export function buildWorld(scene) {
       seats: {
         james: { x: TABLE.x, z: TABLE.z + 1.55, yaw: 0, pitch: -0.42, eye: 1.35 },        // south stool, faces -z
         hannah: { x: TABLE.x, z: TABLE.z - 1.55, yaw: Math.PI, pitch: -0.42, eye: 1.35 }, // north stool, faces +z
+      },
+    },
+    connect4: {
+      anchor: new THREE.Vector3(C4.x, 0.825, C4.z),
+      seats: {
+        james: { x: C4.x + 1.15, z: C4.z, yaw: Math.PI / 2, pitch: -0.2, eye: 1.35 },   // east stool, faces -x
+        hannah: { x: C4.x - 1.15, z: C4.z, yaw: -Math.PI / 2, pitch: -0.2, eye: 1.35 }, // west stool, faces +x
       },
     },
   };

@@ -4,7 +4,9 @@ import { Player } from './player.js';
 import { Game } from './game.js';
 import { initNet, net, getIdentity, setIdentity } from './net.js';
 import { RemoteAvatar } from './avatar.js';
+import { Interact } from './interact.js';
 import { Yahtzee } from './yahtzee.js';
+import { ConnectFour } from './connect4.js';
 
 const app = document.getElementById('app');
 
@@ -35,7 +37,9 @@ const game = new Game(scene, camera, world, player);
 
 initNet();
 const avatar = new RemoteAvatar(scene);
-const yahtzee = new Yahtzee(scene, camera, world, player);
+const interact = new Interact(player);
+const yahtzee = new Yahtzee(scene, camera, world, player, interact);
+const connect4 = new ConnectFour(scene, camera, renderer.domElement, world, player, interact);
 
 // first visit with realtime configured: ask who this is before they step inside
 if (net.enabled && !getIdentity()) {
@@ -62,7 +66,7 @@ window.addEventListener('resize', () => {
 });
 
 // debug handle (used by dev tooling; harmless in production)
-window.__countdown = { player, game, world, camera, scene, renderer, yahtzee, avatar, net };
+window.__countdown = { player, game, world, camera, scene, renderer, yahtzee, connect4, interact, avatar, net };
 
 let lastTime = 0;
 let lastCountdownDraw = 0;
@@ -73,6 +77,8 @@ renderer.setAnimationLoop((time) => {
   player.update(dt);
   game.update(dt);
   yahtzee.update(dt);
+  connect4.update(dt);
+  interact.update();
   avatar.update(dt);
   net.tickPose(player, dt);
   world.motes.update(dt);

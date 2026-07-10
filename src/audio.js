@@ -86,6 +86,22 @@ export const audio = {
     });
   },
 
+  // game piece dropping into place (pitch rises with landing height)
+  plink(pitch = 1) {
+    safe((c) => {
+      const t = c.currentTime;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(1400 * pitch, t);
+      o.frequency.exponentialRampToValueAtTime(900 * pitch, t + 0.07);
+      g.gain.setValueAtTime(0.14, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      o.connect(g).connect(c.destination);
+      o.start(t); o.stop(t + 0.1);
+    });
+  },
+
   // basket made
   chime() {
     safe((c) => {

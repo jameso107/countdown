@@ -5,7 +5,6 @@ import { CATEGORIES, LABELS, emptyCard, scoreCategory, totals, cardFull } from '
 
 const DIE = 0.13;
 const FACE_CHARS = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-const SIT_RANGE = 2.8;
 const TUMBLE_TIME = 0.55;
 const SETTLE_TIME = 0.35;
 
@@ -54,11 +53,18 @@ function makePipTexture(n) {
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export class Yahtzee {
-  constructor(scene, camera, world, player) {
+  constructor(scene, camera, world, player, interact) {
     this.scene = scene;
     this.player = player;
     this.center = world.yahtzee.tableCenter;
     this.seatSpecs = world.yahtzee.seats;
+    this.seatedHere = false;
+
+    interact.register({
+      x: this.center.x, z: this.center.z, range: 2.8,
+      prompt: 'Press E — play Yahtzee ♥', icon: '🎲',
+      activate: () => this.#sit(),
+    });
 
     this.seq = 0;
     this.state = {
@@ -72,7 +78,6 @@ export class Yahtzee {
       cards: { james: emptyCard(), hannah: emptyCard() },
     };
 
-    this.near = false;
     this.anims = [null, null, null, null, null];
 
     this.#buildDice();
@@ -170,7 +175,6 @@ export class Yahtzee {
     this.rollBtn.addEventListener('click', () => this.#roll());
     document.getElementById('yz-stand').addEventListener('click', () => this.#stand());
     document.getElementById('yz-rematch').addEventListener('click', () => this.#rematch());
-    this.sitBtn.addEventListener('click', () => this.#sit());
 
     this.cardEl.addEventListener('click', (e) => {
       const td = e.target.closest('td.preview');
@@ -178,8 +182,7 @@ export class Yahtzee {
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyE' && this.near && !this.player.seated && this.player.active) this.#sit();
-      else if (e.code === 'Escape' && this.player.seated) this.#stand();
+      if (e.code === 'Escape' && this.seatedHere) this.#stand();
     });
   }
 
@@ -191,7 +194,7 @@ export class Yahtzee {
       if (seq <= this.seq) return;
       this.seq = seq;
       this.state = state;
-      this.state.seats[this.me] = this.player.seated;
+      this.state.seats[this.me] = this.seatedHere;
       this.#maybeStart();
       this.#layoutDice(true);
       this.#render();
@@ -237,6 +240,7 @@ export class Yahtzee {
   // ---------------------------------------------------------------------------
   #sit() {
     if (this.player.seated) return;
+    this.seatedHere = true;
     this.player.sit(this.seatSpecs[this.me]);
     document.body.classList.add('seated');
     this.panel.classList.remove('hidden');
@@ -250,7 +254,8 @@ export class Yahtzee {
   }
 
   #stand() {
-    if (!this.player.seated) return;
+    if (!this.seatedHere) return;
+    this.seatedHere = false;
     document.body.classList.remove('seated');
     this.panel.classList.add('hidden');
     this.state.seats[this.me] = false;
@@ -406,20 +411,6 @@ export class Yahtzee {
 
   // ---------------------------------------------------------------------------
   update(dt) {
-    // proximity prompt
-    const p = this.player;
-    const near = !p.seated && p.active &&
-      Math.hypot(p.pos.x - this.center.x, p.pos.z - this.center.z) < SIT_RANGE;
-    if (near !== this.near) {
-      this.near = near;
-      if (p.touchMode) {
-        this.sitBtn.style.display = near ? 'block' : 'none';
-      } else {
-        this.promptEl.textContent = 'Press E — play Yahtzee ♥';
-        this.promptEl.style.display = near ? 'block' : 'none';
-      }
-    }
-
     // dice animation
     const restY = this.center.y + DIE / 2 + 0.002;
     for (let i = 0; i < 5; i++) {

@@ -4,8 +4,9 @@ A walkable 3D world counting down to **July 25, 2026 · 3:30 PM Pacific**.
 
 - **The Gallery** — a countdown on the wall, surrounded by framed photos of us.
 - **The Arcade** — through the doorway: shoot hoops, chase your best streak.
-- **The Parlor** — south of the arcade: a game table for two. Sit down and play
-  Yahtzee together — dice roll on the table, live, when you're both inside.
+- **The Parlor** — south of the arcade: games for two, played live when you're
+  both inside. Sit at the round table for Yahtzee (dice roll right on the
+  table), or at the stand by the west wall for Connect Four (gold vs rose).
 
 When you're both online you'll see each other wandering the world as a little
 glowing heart.
@@ -17,8 +18,9 @@ glowing heart.
 | Walk | `WASD` / arrows (`Shift` to run) | left side of screen |
 | Look | mouse | drag right side |
 | Shoot | hold click, release | hold 🏀 button |
-| Sit at the game table | `E` near the table | tap 🎲 near the table |
-| Leave the table | `Esc` or Stand Up | Stand Up |
+| Sit at a game | `E` near it | tap the button near it |
+| Drop a Connect Four disc | click a column (or the panel arrows) | tap a column |
+| Leave a game | `Esc` or Stand Up | Stand Up |
 
 ## Develop
 
