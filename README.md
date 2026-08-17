@@ -1,6 +1,7 @@
 # James ♥ Hannah — Countdown
 
-A walkable 3D world counting down to **July 25, 2026 · 3:30 PM Pacific**.
+A walkable 3D world counting down to **August 23, 2026 · noon Eastern**
+(the target lives in `TARGET_DATE` in `src/world.js`).
 
 - **The Gallery** — a countdown on the wall, surrounded by framed photos of us.
 - **The Arcade** — through the doorway: shoot hoops, chase your best streak.

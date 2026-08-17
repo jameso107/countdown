@@ -14,7 +14,7 @@ export const HALL = { x0: 9, x1: 13, z0: -1.4, z1: 1.4 };
 export const ROOM_C = { x0: 15, x1: 25, z0: 11, z1: 19 };    // the parlor (game room)
 export const HALL2 = { x0: 18.6, x1: 21.4, z0: 7, z1: 11 };  // south hallway to the parlor
 
-export const TARGET_DATE = new Date('2026-07-25T15:30:00-07:00'); // July 25, 3:30 PM PDT
+export const TARGET_DATE = new Date('2026-08-23T12:00:00-04:00'); // Sunday, August 23, noon Eastern
 
 const texLoader = new THREE.TextureLoader();
 
@@ -147,7 +147,7 @@ function makeCountdown() {
 
     g.font = '30px Georgia, serif';
     g.fillStyle = '#d9c08c';
-    g.fillText('J U L Y   2 5 ,   2 0 2 6   ·   3 : 3 0   P M   P A C I F I C', c.width / 2, 396);
+    g.fillText('A U G U S T   2 3 ,   2 0 2 6   ·   N O O N   E A S T E R N', c.width / 2, 396);
 
     tex.needsUpdate = true;
   }
